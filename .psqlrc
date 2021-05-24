@@ -1,0 +1,43 @@
+/*
+
+.psqlrc for Lance Alligood
+
+*/
+
+-- Suppress any output when setting options below
+\set QUIET
+
+-- Customize prompt
+-- Requires PGVERSION to be defined in .bashrc/.bash_profile/.pgsql_profile
+\set PROMPT1 '%033[1;97;46m%m %/ (%`echo $PGVERSION`)%033[00m %# '
+\set PROMPT2 '%033[1;97;46m---%033[00m %# '
+
+-- Show how long each query takes to execute
+\timing ON
+
+-- Use best available output format
+\set VERBOSITY verbose
+\set HISTFILE ~/.psql_history- :DBNAME
+\set HISTCONTROL ignoredups
+\set COMP_KEYWORD_CASE upper
+
+-- Set pager (REQUIRES pspg TO BE INSTALLED!)
+\setenv PAGER 'pspg -X -s 5 -c 0 --less-status-bar -F'
+\set x '\\setenv PAGER less'
+\set xx '\\setenv PAGER \'pspg -X -s 5 -c 0 --less-status-bar -F\''
+
+-- Set editor
+\setenv EDITOR vim
+
+-- Replace null field result with '[NULL]'
+\pset null '[NULL]'
+
+-- Make SQL output formatting a little prettier
+\pset linestyle 'unicode'
+\pset unicode_border_linestyle double
+\pset unicode_column_linestyle single
+\pset unicode_header_linestyle single
+\pset border 2
+
+-- Re-enable standard output
+\unset QUIET

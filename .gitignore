@@ -1,0 +1,13 @@
+vim/view/
+vim/spell/en.utf-8*
+vim/.netrwhist
+vim/undo/
+
+# black plugin is nice but not required
+vim/black/
+black.vim
+
+.vscode/
+.mypy_cache/
+.pytest_cache/
+__pycache__/
