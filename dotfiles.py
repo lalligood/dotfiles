@@ -19,6 +19,12 @@ vim_sources = [".gvimrc", ".vimrc", ".vim/"]
 hack_repo = "source-foundry/Hack"
 
 
+class InvalidDirectoryError(Exception):
+    """Raise this exception if trying to run this script from wrong directory."""
+
+    pass
+
+
 class InvalidOperatingSystemError(Exception):
     """Raise this exception whenever trying to run this script on Windows PC."""
 
@@ -105,102 +111,96 @@ def check_for_install(command: str, current_os: str) -> None:
         print(f"{command.split()[0]} already installed. Skipping. . .")
 
 
-@click.command()
-@click.option(
-    "--project",
-    "project_home",
-    default=project_home,
-    show_default=True,
-    help="Specify path to your projects directory",
-)
-@click.option(
-    "--iterm2",
-    "iterm2",
-    is_flag=True,
-    default=False,
-    help="Configure ONLY settings for iTerm 2 (Mac only!)",
-)
-@click.option(
-    "--psql",
-    "psql",
-    is_flag=True,
-    default=False,
-    help="Configure ONLY settings for psql",
-)
-@click.option(
-    "--tmux",
-    "tmux",
-    is_flag=True,
-    default=False,
-    help="Configure ONLY settings for tmux",
-)
-@click.option(
-    "--vim",
-    "vim",
-    is_flag=True,
-    default=False,
-    help="Configure ONLY settings for vim",
-)
-@click.option(
-    "--starship",
-    "starship",
-    is_flag=True,
-    default=False,
-    help="Install ONLY starship prompt with personal settings",
-)
-@click.option(
-    "--all",
-    "everything",
-    is_flag=True,
-    default=False,
-    help="Install all configuration files for the current operating system",
-)
-def main(
-    project_home: Path,
-    iterm2: bool = False,
-    psql: bool = False,
-    tmux: bool = False,
-    vim: bool = False,
-    starship: bool = False,
-    everything: bool = False,
-) -> None:
-    """Install all necessary personal configuration files for iTerm2 (Mac only),
-    psql, tmux, vim, and starship."""
-    running_on = determine_os()
-    # Confirm the path where we expect the projects to be is a child dir of home
-    # directory
+@click.group()
+def main() -> None:
+    """Install all applications & necessary personal configuration files for:
+
+    * bash -- shell
+
+    * iTerm2 (Mac only) -- terminal emulator
+
+    * psql -- PostgreSQL database CLI
+
+    * starship -- prompt
+
+    * tmux -- (t)erminal (mu)ltiple(x)er
+
+    * vim/GVim/MacVim -- editor
+    """
     if home in list(current_dir.parents) and Path(project_home).exists():
-        print(f"Projects directory found in {project_home}")
+        print(f"Projects directory found in: {project_home}")
     else:
-        print(
+        raise InvalidDirectoryError(
             "ERROR: PROJECTS DIRECTORY NOT FOUND IN HOME DIRECTORY OR DOES NOT "
             + "EXIST!"
         )
-    if everything and running_on == "darwin":
-        iterm2 = psql = tmux = vim = starship = True
-    if everything:
-        psql = tmux = vim = starship = True
-    if iterm2 and running_on == "darwin":
+        sys.exit(1)
+
+
+@main.command()
+def bash():
+    """Install bash shell with personalized settings."""
+    pass
+
+
+@main.command()
+def iterm2():
+    """Mac OSX ONLY: Install iTerm2 & provide instructions to load preferred
+    settings."""
+    running_on = determine_os()
+    if running_on == "darwin":
         check_for_install("iterm2", running_on)
-        # DO NOT SYMLINK iterm2 settings file!
-        # create_symlink("com.google.code.iterm2.plist")
-        print("Instructions for restoring iTerm2 settings...")
-    elif iterm2:
+        print("INSTRUCTIONS FOR RESTORING iTerm2 SETTINGS GO HERE")
+    else:
         print("iterm2 CAN ONLY BE INSTALLED ON MAC OSX. Skipping. . .")
-    if psql:
-        create_symlink(".psqlrc")
-    if tmux:
-        check_for_install("tmux -V", running_on)
-        create_symlink(f"{running_on}/.tmux.conf")
-    if vim:
-        # With vim directory, symlink should be ~/.vim!
-        for each in vim_sources:
-            target_path = home / ".vim" if each == "vim/" else home
-            create_symlink(each, target_path)
-        git_clone(hack_repo)
-    if starship:
-        check_for_install("starship --help", running_on)
-        create_symlink("starship.toml", home / ".config")
+
+
+@main.command()
+def psql():
+    """Install psql CLI for PostgreSQL with personalized settings."""
+    # if psql:
+    #     create_symlink(".psqlrc")
+    pass
+
+
+@main.command()
+def vim():
+    """Install GVim/MacVim with personalized settings."""
+    # if vim:
+    #     # With vim directory, symlink should be ~/.vim!
+    #     for each in vim_sources:
+    #         target_path = home / ".vim" if each == "vim/" else home
+    #         create_symlink(each, target_path)
+    #     git_clone(hack_repo)
+    pass
+
+
+@main.command()
+def tmux():
+    """Install tmux with personalized settings."""
+    # if tmux:
+    #     check_for_install("tmux -V", running_on)
+    #     create_symlink(f"{running_on}/.tmux.conf")
+    pass
+
+
+@main.command()
+def starship():
+    """Install starship prompt with personalized settings."""
+    # if starship:
+    #     check_for_install("starship --help", running_on)
+    #     create_symlink("starship.toml", home / ".config")
+    pass
+
+
+@main.command()
+def all():
+    """Install ALL packages with personalized settings."""
+    # if everything and running_on == "darwin":
+    #     iterm2 = psql = tmux = vim = starship = True
+    # if everything:
+    #     psql = tmux = vim = starship = True
+    pass
 
 
 if __name__ == "__main__":
