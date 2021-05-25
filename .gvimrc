@@ -164,9 +164,6 @@ nnoremap <C-l> <C-w>l
 " DEVELOPMENT SPECIFIC SETTINGS
 " ==================================================================
 
-" Fuzzy file finder
-" ctrlp plugin: https://github.com/ctrlpvim/ctrlp.vim
-set runtimepath^=~/.vim/bundle/ctrlp.vim
 " Insert mode text expansion shortcuts as inspired by
 " https://8thlight.com/blog/jerome-goodrich/2017/01/17/Vim-and-TDD.html
 " SQL-centric

@@ -1,0 +1,12 @@
+[[ $(uname -s) == "Darwin" ]] && alias chmod='chmod -v' || alias chmod='chmod -cv'
+[[ $(uname -s) == "Darwin" ]] && alias chown='chown -v' || alias chown='chown -cv'
+alias cp='cp -v'
+alias ln='ln -v'
+[[ $(uname -s) == "Darwin" ]] && alias ls='ls -G'
+alias mv='mv -v'
+alias pip='pip3'
+alias py='ipython3'
+alias python='ipython3'
+alias rm='rm -v'
+alias lazydocker='cd $HOME/Projects; lazydocker; cd -'
+

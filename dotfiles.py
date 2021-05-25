@@ -15,8 +15,8 @@ import sys
 home = Path.home()
 project_home = home / "Projects"
 current_dir = Path.cwd()
-vim_sources = [".gvimrc", ".vimrc", "vim/"]
-hack_font = "source-foundry/Hack"
+vim_sources = [".gvimrc", ".vimrc", ".vim/"]
+hack_repo = "source-foundry/Hack"
 
 
 class InvalidOperatingSystemError(Exception):
@@ -111,7 +111,7 @@ def check_for_install(command: str, current_os: str) -> None:
     "project_home",
     default=project_home,
     show_default=True,
-    help=f"Specify path to your projects directory",
+    help="Specify path to your projects directory",
 )
 @click.option(
     "--iterm2",
@@ -197,10 +197,10 @@ def main(
         for each in vim_sources:
             target_path = home / ".vim" if each == "vim/" else home
             create_symlink(each, target_path)
-        git_clone(hack_font)
+        git_clone(hack_repo)
     if starship:
         check_for_install("starship --help", running_on)
-        create_symlink("starshpytest capsysip.toml", home / ".config")
+        create_symlink("starship.toml", home / ".config")
 
 
 if __name__ == "__main__":
