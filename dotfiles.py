@@ -54,7 +54,9 @@ def create_symlink(source_file: str, target_path: Path = home) -> None:
         new_target = target_file.with_suffix(".bak")
         target_file.rename(new_target)
     target_file.symlink_to(source_path)
-    print(f"Symlink for {source_path} successfully created in {target_path}")
+    print(
+        f"Symlink for {source_path} successfully created in {target_file.parent}"
+    )
 
 
 def git_clone(project: str, target: Path = project_home) -> None:
@@ -71,7 +73,7 @@ def git_clone(project: str, target: Path = project_home) -> None:
 def exit_code(command: str) -> bool:
     """Check the exit code to see if application is installed or not."""
     try:
-        _exit_code = subprocess.run(command.split())
+        _exit_code = subprocess.run(command.split(), capture_output=True)
     except FileNotFoundError:
         return False
     return True if _exit_code.returncode == 0 else False
@@ -96,10 +98,10 @@ def mac_install(application: str) -> None:
     os.system(f"brew install {application}")
 
 
-def check_for_install(command: str, current_os: str) -> None:
+def check_for_install(command: str) -> None:
     """Determine if specified application is installed. Install if not found."""
     if exit_code(command) is False:
-        if current_os == "linux":
+        if determine_os() == "linux":
             print(
                 f"{command} does not appear to be installed. You may be prompted "
                 + "to enter sudo password."
@@ -147,9 +149,8 @@ def bash():
 def iterm2():
     """Mac OSX ONLY: Install iTerm2 & provide instructions to load preferred
     settings."""
-    running_on = determine_os()
-    if running_on == "darwin":
-        check_for_install("iterm2", running_on)
+    if determine_os() == "darwin":
+        check_for_install("iterm2")
         print("INSTRUCTIONS FOR RESTORING iTerm2 SETTINGS GO HERE")
     else:
         print("iterm2 CAN ONLY BE INSTALLED ON MAC OSX. Skipping. . .")
@@ -158,39 +159,34 @@ def iterm2():
 @main.command()
 def psql():
     """Install psql CLI for PostgreSQL with personalized settings."""
-    # if psql:
-    #     create_symlink(".psqlrc")
-    pass
+    create_symlink(".psqlrc")
+    check_for_install("psql --version")
 
 
 @main.command()
 def vim():
     """Install GVim/MacVim with personalized settings."""
-    # if vim:
-    #     # With vim directory, symlink should be ~/.vim!
-    #     for each in vim_sources:
-    #         target_path = home / ".vim" if each == "vim/" else home
-    #         create_symlink(each, target_path)
-    #     git_clone(hack_repo)
-    pass
+    for each in vim_sources:
+        create_symlink(each)
+    check_for_install("vim --version")
+    # Linux: vim-gtk3
+    # Mac: MacVim
+    git_clone(hack_repo)
 
 
 @main.command()
 def tmux():
     """Install tmux with personalized settings."""
-    # if tmux:
-    #     check_for_install("tmux -V", running_on)
-    #     create_symlink(f"{running_on}/.tmux.conf")
-    pass
+    running_on = determine_os()
+    check_for_install("tmux -V")
+    create_symlink(f"{running_on}/.tmux.conf", home / ".tmux.conf")
 
 
 @main.command()
 def starship():
     """Install starship prompt with personalized settings."""
-    # if starship:
-    #     check_for_install("starship --help", running_on)
-    #     create_symlink("starship.toml", home / ".config")
-    pass
+    check_for_install("starship --help")
+    create_symlink(".config/starship.toml")
 
 
 @main.command()
