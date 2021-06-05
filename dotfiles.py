@@ -9,14 +9,43 @@ import click
 from git import Repo
 from pathlib import Path
 import os
-import subprocess
+import shutil
+import subprocess  # nosec
 import sys
 
 home = Path.home()
 project_home = home / "Projects"
 current_dir = Path.cwd()
 vim_sources = [".gvimrc", ".vimrc", ".vim/"]
+vim_apps = {"linux": "vim-gtk3", "darwin": "macvim"}
 hack_repo = "source-foundry/Hack"
+package_manager = {"darwin": "brew", "linux": "sudo apt"}
+apps = {
+    "darwin": [
+        "bash",
+        "fzf",
+        "git",
+        "lazydocker",
+        "most",
+        "pipenv",
+        "pspg",
+        "the_silver_searcher",
+        "yank",
+    ],
+    "linux": [
+        "fzf",
+        "git",
+        "lazydocker",
+        "most",
+        "pipenv",
+        "pspg",
+        "silversearcher-ag",
+    ],
+}
+starship = {
+    "darwin": "brew install starship",
+    "linux": "sh -c '$(curl -fsSL https://starship.rs/install.sh)'",
+}
 
 
 class InvalidDirectoryError(Exception):
@@ -42,10 +71,12 @@ def determine_os() -> str:
     return current_os
 
 
-def create_symlink(source_file: str, target_path: Path = home) -> None:
+def create_symlink(
+    source_file: str, target_path: Path = home, override_target: bool = False
+) -> None:
     """Create a symlink in expected directory for specified file."""
     source_path = current_dir / source_file
-    target_file = target_path / source_file
+    target_file = target_path if override_target else (target_path / source_file)
     # Remove any existing symlink
     if target_file.is_symlink():
         target_file.unlink()
@@ -54,12 +85,10 @@ def create_symlink(source_file: str, target_path: Path = home) -> None:
         new_target = target_file.with_suffix(".bak")
         target_file.rename(new_target)
     target_file.symlink_to(source_path)
-    print(
-        f"Symlink for {source_path} successfully created in {target_file.parent}"
-    )
+    print(f"Symlink for {source_path} successfully created in {target_file.parent}")
 
 
-def git_clone(project: str, target: Path = project_home) -> None:
+def git_clone(project: str) -> Path:
     """Clone a git repository from GitHub."""
     target_path = project_home / project.split("/")[1]
     if not target_path.exists():
@@ -68,12 +97,26 @@ def git_clone(project: str, target: Path = project_home) -> None:
         print(f"{project} cloned successfully to {target_path}")
     else:
         print(f"{target_path} already exists. Skipping. . .")
+    return target_path
+
+
+def to_font_directory(source_path: Path) -> None:
+    """Copy TTF fonts to user fonts directory."""
+    source_files = (source_path / "build" / "ttf").glob("*.ttf")
+    target_path = (
+        (home / "Library" / "Fonts")  # Mac user fonts directory
+        if determine_os() == "darwin"
+        else (home / ".fonts")  # Linux user fonts directory
+    )
+    target_path.mkdir(exist_ok=True)
+    for each in source_files:
+        shutil.copy(each, target_path / each.name)
 
 
 def exit_code(command: str) -> bool:
     """Check the exit code to see if application is installed or not."""
     try:
-        _exit_code = subprocess.run(command.split(), capture_output=True)
+        _exit_code = subprocess.run(command.split(), capture_output=True)  # nosec
     except FileNotFoundError:
         return False
     return True if _exit_code.returncode == 0 else False
@@ -82,23 +125,26 @@ def exit_code(command: str) -> bool:
 def linux_install(application: str) -> None:
     """Install application on Linux."""
     if application.startswith("starship"):
-        os.system("""sh -c '$(curl -fsSL https://starship.rs/install.sh)'""")
+        os.system()  # nosec
     else:
         application = (
             "postgresql-client-common"
             if application.startswith("psql")
             else application
         )
-        os.system(f"sudo apt install {application}")
+        os.system("sudo apt update")  # nosec
+        os.system(f"sudo apt install {application}")  # nosec
 
 
 def mac_install(application: str) -> None:
     """Install application on Mac."""
-    os.system("brew update")
-    os.system(f"brew install {application}")
+    os.system("brew update")  # nosec
+    os.system(f"brew install {application}")  # nosec
 
 
-def check_for_install(command: str) -> None:
+def check_for_install(
+    command: str, mac_name: str = None, linux_name: str = None
+) -> None:
     """Determine if specified application is installed. Install if not found."""
     if exit_code(command) is False:
         if determine_os() == "linux":
@@ -106,9 +152,9 @@ def check_for_install(command: str) -> None:
                 f"{command} does not appear to be installed. You may be prompted "
                 + "to enter sudo password."
             )
-            linux_install(command)
+            linux_install(linux_name or command)
         else:
-            mac_install(command)
+            mac_install(mac_name or command)
     else:
         print(f"{command.split()[0]} already installed. Skipping. . .")
 
@@ -117,16 +163,12 @@ def check_for_install(command: str) -> None:
 def main() -> None:
     """Install all applications & necessary personal configuration files for:
 
+    \b
     * bash -- shell
-
     * iTerm2 (Mac only) -- terminal emulator
-
     * psql -- PostgreSQL database CLI
-
     * starship -- prompt
-
     * tmux -- (t)erminal (mu)ltiple(x)er
-
     * vim/GVim/MacVim -- editor
     """
     if home in list(current_dir.parents) and Path(project_home).exists():
@@ -136,22 +178,59 @@ def main() -> None:
             "ERROR: PROJECTS DIRECTORY NOT FOUND IN HOME DIRECTORY OR DOES NOT "
             + "EXIST!"
         )
-        sys.exit(1)
+
+
+@main.command()
+def baseline():
+    """Ensure that all core environment & CLI apps are installed. If any are
+    missing, then this will install them for you."""
+    installed_list = (
+        subprocess.run(  # nosec
+            ["brew", "list"]
+            if determine_os() == "darwin"
+            else ["apt", "list", "--installed"],
+            capture_output=True,
+        )
+        .stdout.decode()
+        .split("\n")[1:-1]
+    )
+    installer = package_manager[determine_os()]
+    subprocess.run([installer, "update"])  # nosec
+    for each in apps[determine_os()]:
+        if each not in installed_list:
+            print(f"{each} NOT FOUND! Installing {each} now. . .")
+            subprocess.run([installer, "install", each])  # nosec
 
 
 @main.command()
 def bash():
     """Install bash shell with personalized settings."""
-    pass
+    if determine_os() == "darwin":
+        check_for_install("bash")
+        create_symlink(".bash_profile")
+        # .bashrc is needed for starship prompt when inside pipenv shell
+        create_symlink(".bashrc.mac", home / ".bashrc", override_target=True)
+    else:
+        create_symlink(".bashrc")
+    create_symlink(".bash_aliases")
 
 
 @main.command()
 def iterm2():
     """Mac OSX ONLY: Install iTerm2 & provide instructions to load preferred
     settings."""
+    usage = """VERY IMPORTANT: READ ALL OF THIS BEFORE CONTINUING!!!
+
+        *** INSTRUCTIONS FOR RESTORING iTerm2 SETTINGS ***
+1. Open iTerm2.
+2. Open Preferences (iTerm2 -> Preferences... OR <Cmd>-,)
+3. Go to General tab. Then click on Preferences.
+4. Ensure that "Load preferences from a custom folder or URL" is checked.
+5. Click Browse & navigate to your dotfiles project folder containing
+    com.googlecode.iterm2.plist file. Click Open."""
     if determine_os() == "darwin":
         check_for_install("iterm2")
-        print("INSTRUCTIONS FOR RESTORING iTerm2 SETTINGS GO HERE")
+        print(usage)
     else:
         print("iterm2 CAN ONLY BE INSTALLED ON MAC OSX. Skipping. . .")
 
@@ -165,13 +244,12 @@ def psql():
 
 @main.command()
 def vim():
-    """Install GVim/MacVim with personalized settings."""
+    """Install GVim/MacVim with personalized settings and font."""
     for each in vim_sources:
         create_symlink(each)
     check_for_install("vim --version")
-    # Linux: vim-gtk3
-    # Mac: MacVim
-    git_clone(hack_repo)
+    fonts_dir = git_clone(hack_repo)
+    to_font_directory(fonts_dir)
 
 
 @main.command()
@@ -179,7 +257,9 @@ def tmux():
     """Install tmux with personalized settings."""
     running_on = determine_os()
     check_for_install("tmux -V")
-    create_symlink(f"{running_on}/.tmux.conf", home / ".tmux.conf")
+    create_symlink(
+        f"{running_on}/.tmux.conf", home / ".tmux.conf", override_target=True
+    )
 
 
 @main.command()
@@ -192,10 +272,6 @@ def starship():
 @main.command()
 def all():
     """Install ALL packages with personalized settings."""
-    # if everything and running_on == "darwin":
-    #     iterm2 = psql = tmux = vim = starship = True
-    # if everything:
-    #     psql = tmux = vim = starship = True
     pass
 
 
