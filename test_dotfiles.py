@@ -1,20 +1,21 @@
 """Tests for dotfiles.py."""
+from pathlib import Path
 from pytest import mark, raises
+import sys
 
 from dotfiles import (
     InvalidOperatingSystemError,
-    create_symlink,
     determine_os,
     exit_code,
+    font_info,
+    download_and_install_font,
 )
 
 
-def test_determine_os_returns_linux(capsys):
-    """Make sure that Linux operating system is found."""
+def test_determine_os_passes_with_current_os():
+    """Make sure that current operating system is found."""
     result = determine_os()
-    assert "linux" == result
-    stdout, _ = capsys.readouterr()
-    assert "Valid" in stdout
+    assert sys.platform == result
 
 
 @mark.xfail(reason="Need to mock out sys.platform call")
@@ -51,12 +52,6 @@ def test_create_symlink_creates_backup_of_file():
     pass
 
 
-@mark.xfail(reason="INCOMPLETE")
-def test_git_clone_adds_repo_to_Projects_directory():
-    """Make sure that a project is cloned from GitHub to Projects directory."""
-    pass
-
-
 @mark.parametrize(
     "command, expected",
     [("tmux -V", True), ("psql", False), ("asdfasdfasdfasdf", False)],
@@ -67,3 +62,12 @@ def test_exit_code_detects_installed_application(command, expected):
     installed."""
     result = exit_code(command)
     assert result is expected
+
+
+def test_download_and_install_font_success(tmpdir, capsys):
+    """Make sure that zip file containing fonts is downloaded.
+
+    WARNING: This test will overwrite existing fonts!"""
+    download_and_install_font(font_info, Path(tmpdir))
+    stdout, _ = capsys.readouterr()
+    assert "Hack.zip" in stdout
