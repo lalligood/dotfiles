@@ -6,19 +6,24 @@ font) as well.
 This script requires that you are running on Linux or Mac, have at least Python 3.6
 installed & have pip installed click."""
 import click
-from git import Repo
-from pathlib import Path
 import os
-import shutil
+from pathlib import Path
+import requests
 import subprocess  # nosec
 import sys
+from zipfile import ZipFile
 
 home = Path.home()
 project_home = home / "Projects"
 current_dir = Path.cwd()
+currently_installed_list = {
+    "darwin": ["brew", "list"],
+    "linux": ["apt", "list", "--installed"],
+}
 vim_sources = [".gvimrc", ".vimrc", ".vim/"]
 vim_apps = {"linux": "vim-gtk3", "darwin": "macvim"}
-hack_repo = "source-foundry/Hack"
+font_info = {"repo": "ryanoasis/nerd-fonts", "name": "Hack"}
+font_destination = {"darwin": home / "Library" / "Fonts", "linux": home / ".fonts"}
 package_manager = {"darwin": "brew", "linux": "sudo apt"}
 apps = {
     "darwin": [
@@ -35,7 +40,7 @@ apps = {
     "linux": [
         "fzf",
         "git",
-        "lazydocker",
+        # "lazydocker",
         "most",
         "pipenv",
         "pspg",
@@ -67,7 +72,6 @@ def determine_os() -> str:
         raise InvalidOperatingSystemError(
             "IS THIS SOME KIND OF SICK JOKE?! I DON'T DO WINDOWS!"
         )
-    print(f"Valid OS found: {current_os}")
     return current_os
 
 
@@ -88,29 +92,27 @@ def create_symlink(
     print(f"Symlink for {source_path} successfully created in {target_file.parent}")
 
 
-def git_clone(project: str) -> Path:
-    """Clone a git repository from GitHub."""
-    target_path = project_home / project.split("/")[1]
-    if not target_path.exists():
-        print(f"Cloning {project}. This may take a minute or two. . .")
-        Repo.clone_from(f"https://github.com/{project}.git", target_path)
-        print(f"{project} cloned successfully to {target_path}")
-    else:
-        print(f"{target_path} already exists. Skipping. . .")
-    return target_path
-
-
-def to_font_directory(source_path: Path) -> None:
-    """Copy TTF fonts to user fonts directory."""
-    source_files = (source_path / "build" / "ttf").glob("*.ttf")
-    target_path = (
-        (home / "Library" / "Fonts")  # Mac user fonts directory
-        if determine_os() == "darwin"
-        else (home / ".fonts")  # Linux user fonts directory
-    )
+def download_and_install_font(font: str, download_path: Path = None) -> None:
+    """Download latest version of Hack Nerd font from GitHub to local directory."""
+    print("Checking for latest version of Hack Nerd font. This may take a few seconds.")
+    repo = font.get("repo")
+    name = font.get("name")
+    latest_url = f"https://api.github.com/repos/{repo}/releases/latest"
+    response = requests.get(latest_url).json()
+    version = response.get("tag_name")
+    print(f"Latest version is {version}. Please wait while downloading fonts now.")
+    zip_file_url = f"https://github.com/{repo}/releases/download/{version}/{name}.zip"
+    download_path = download_path or project_home
+    zip_file_path = download_path / f"{name}.zip"
+    print(f"Please wait while downloading {zip_file_path}. . .")
+    with requests.get(zip_file_url, stream=True) as r, open(zip_file_path, "wb") as f:
+        for chunk in r.iter_content(chunk_size=8192):
+            f.write(chunk)
+    target_path = font_destination[determine_os()]
     target_path.mkdir(exist_ok=True)
-    for each in source_files:
-        shutil.copy(each, target_path / each.name)
+    with ZipFile(zip_file_path, "r") as z:
+        z.extractall(target_path)
+    zip_file_path.unlink()  # Delete downloaded zip file
 
 
 def exit_code(command: str) -> bool:
@@ -184,22 +186,22 @@ def main() -> None:
 def baseline():
     """Ensure that all core environment & CLI apps are installed. If any are
     missing, then this will install them for you."""
-    installed_list = (
-        subprocess.run(  # nosec
-            ["brew", "list"]
-            if determine_os() == "darwin"
-            else ["apt", "list", "--installed"],
-            capture_output=True,
+    installed_list = [
+        each.split("/")[0]
+        for each in subprocess.run(  # nosec
+            currently_installed_list[determine_os()], capture_output=True
         )
         .stdout.decode()
         .split("\n")[1:-1]
-    )
-    installer = package_manager[determine_os()]
-    subprocess.run([installer, "update"])  # nosec
+    ]
+    installer = package_manager[determine_os()].split()
+    subprocess.run(installer + ["update"])  # nosec
     for each in apps[determine_os()]:
         if each not in installed_list:
             print(f"{each} NOT FOUND! Installing {each} now. . .")
-            subprocess.run([installer, "install", each])  # nosec
+            subprocess.run(installer + ["install", each])  # nosec
+        else:
+            print(f"{each} is already installed. Skipping. . .")
 
 
 @main.command()
@@ -248,8 +250,7 @@ def vim():
     for each in vim_sources:
         create_symlink(each)
     check_for_install("vim --version")
-    fonts_dir = git_clone(hack_repo)
-    to_font_directory(fonts_dir)
+    download_and_install_font(font_info)
 
 
 @main.command()
