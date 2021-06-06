@@ -9,7 +9,7 @@ import click
 import os
 from pathlib import Path
 import requests
-import subprocess  # nosec
+import subprocess
 import sys
 from zipfile import ZipFile
 
@@ -118,7 +118,7 @@ def download_and_install_font(font: str, download_path: Path = None) -> None:
 def exit_code(command: str) -> bool:
     """Check the exit code to see if application is installed or not."""
     try:
-        _exit_code = subprocess.run(command.split(), capture_output=True)  # nosec
+        _exit_code = subprocess.run(command.split(), capture_output=True)
     except FileNotFoundError:
         return False
     return True if _exit_code.returncode == 0 else False
@@ -127,21 +127,21 @@ def exit_code(command: str) -> bool:
 def linux_install(application: str) -> None:
     """Install application on Linux."""
     if application.startswith("starship"):
-        os.system()  # nosec
+        os.system()
     else:
         application = (
             "postgresql-client-common"
             if application.startswith("psql")
             else application
         )
-        os.system("sudo apt update")  # nosec
-        os.system(f"sudo apt install {application}")  # nosec
+        os.system("sudo apt update")
+        os.system(f"sudo apt install {application}")
 
 
 def mac_install(application: str) -> None:
     """Install application on Mac."""
-    os.system("brew update")  # nosec
-    os.system(f"brew install {application}")  # nosec
+    os.system("brew update")
+    os.system(f"brew install {application}")
 
 
 def check_for_install(
@@ -188,18 +188,18 @@ def baseline():
     missing, then this will install them for you."""
     installed_list = [
         each.split("/")[0]
-        for each in subprocess.run(  # nosec
+        for each in subprocess.run(
             currently_installed_list[determine_os()], capture_output=True
         )
         .stdout.decode()
         .split("\n")[1:-1]
     ]
     installer = package_manager[determine_os()].split()
-    subprocess.run(installer + ["update"])  # nosec
+    subprocess.run(installer + ["update"])
     for each in apps[determine_os()]:
         if each not in installed_list:
             print(f"{each} NOT FOUND! Installing {each} now. . .")
-            subprocess.run(installer + ["install", each])  # nosec
+            subprocess.run(installer + ["install", each])
         else:
             print(f"{each} is already installed. Skipping. . .")
 
