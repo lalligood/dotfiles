@@ -9,3 +9,4 @@ alias pip='pip3'
 alias py='ipython3'
 alias python='python3'
 alias rm='rm -v'
+md() { pandoc "$1" | lynx -stdin; }  # markdown viewer

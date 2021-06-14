@@ -6,7 +6,6 @@ font) as well.
 This script requires that you are running on Linux or Mac, have at least Python 3.6
 installed & have pip installed click."""
 import click
-import os
 from pathlib import Path
 import requests
 import subprocess
@@ -20,37 +19,56 @@ currently_installed_list = {
     "darwin": ["brew", "list"],
     "linux": ["apt", "list", "--installed"],
 }
-vim_sources = [".gvimrc", ".vimrc", ".vim/"]
-vim_apps = {"linux": "vim-gtk3", "darwin": "macvim"}
 font_info = {"repo": "ryanoasis/nerd-fonts", "name": "Hack"}
 font_destination = {"darwin": home / "Library" / "Fonts", "linux": home / ".fonts"}
 package_manager = {"darwin": "brew", "linux": "sudo apt"}
-apps = {
-    "darwin": [
-        "bash",
+baseline_apps = {
+    "both": [
         "fzf",
         "git",
-        "lazydocker",
+        "lynx",
+        "pandoc",
         "most",
         "pipenv",
         "pspg",
+    ],
+    "darwin": [
+        "bash",
+        "lazydocker",
         "the_silver_searcher",
         "yank",
     ],
     "linux": [
-        "fzf",
-        "git",
         # "lazydocker",
-        "most",
-        "pipenv",
-        "pspg",
         "silversearcher-ag",
     ],
 }
-starship = {
-    "darwin": "brew install starship",
-    "linux": "sh -c '$(curl -fsSL https://starship.rs/install.sh)'",
+apps = {
+    "bash": {
+        "darwin": "bash",
+        "verify": "bash",
+    },
+    "psql": {
+        "linux": "postgresql-client-common",
+        "verify": "psql --version",
+    },
+    "starship": {
+        "darwin": "starship",
+        "linux": "starship",
+        "verify": "starship --help",
+    },
+    "tmux": {
+        "darwin": "tmux",
+        "linux": "tmux",
+        "verify": "tmux -V",
+    },
+    "vim": {
+        "darwin": "macvim",
+        "linux": "vim-gtk3",
+        "verify": "vim --version",
+    },
 }
+vim_sources = [".gvimrc", ".vimrc", ".vim/"]
 
 
 class InvalidDirectoryError(Exception):
@@ -75,12 +93,10 @@ def determine_os() -> str:
     return current_os
 
 
-def create_symlink(
-    source_file: str, target_path: Path = home, override_target: bool = False
-) -> None:
+def create_symlink(source_file: str, target_path: Path = None) -> None:
     """Create a symlink in expected directory for specified file."""
     source_path = current_dir / source_file
-    target_file = target_path if override_target else (target_path / source_file)
+    target_file = target_path or (home / source_file)
     # Remove any existing symlink
     if target_file.is_symlink():
         target_file.unlink()
@@ -93,7 +109,8 @@ def create_symlink(
 
 
 def download_and_install_font(font: str, download_path: Path = None) -> None:
-    """Download latest version of Hack Nerd font from GitHub to local directory."""
+    """Download latest version of Hack Nerd font from GitHub to local directory. If font
+    already exists, it will download latest version & install it."""
     print("Checking for latest version of Hack Nerd font. This may take a few seconds.")
     repo = font.get("repo")
     name = font.get("name")
@@ -113,6 +130,7 @@ def download_and_install_font(font: str, download_path: Path = None) -> None:
     with ZipFile(zip_file_path, "r") as z:
         z.extractall(target_path)
     zip_file_path.unlink()  # Delete downloaded zip file
+    print(f"{name} font successfully installed in {target_path}")
 
 
 def exit_code(command: str) -> bool:
@@ -124,41 +142,33 @@ def exit_code(command: str) -> bool:
     return True if _exit_code.returncode == 0 else False
 
 
-def linux_install(application: str) -> None:
-    """Install application on Linux."""
-    if application.startswith("starship"):
-        os.system()
-    else:
-        application = (
-            "postgresql-client-common"
-            if application.startswith("psql")
-            else application
-        )
-        os.system("sudo apt update")
-        os.system(f"sudo apt install {application}")
+def starship_installer_for_linux():
+    """LINUX ONLY: Download installer, install starship prompt, and delete installer."""
+    install_file = "install.sh"
+    url = f"https://starship.rs/{install_file}"
+    target_file = project_home / install_file
+    print(f"Downloading {target_file}")
+    installer = requests.get(url, stream=True, allow_redirects=True, timeout=30)
+    with open(target_file, "wb") as f:
+        f.write(installer.content)
+    print("Installing starship. . .")
+    subprocess.run(["sh", "-c", target_file])
+    print(f"Deleting {target_file}")
+    target_file.unlink()
 
 
-def mac_install(application: str) -> None:
-    """Install application on Mac."""
-    os.system("brew update")
-    os.system(f"brew install {application}")
-
-
-def check_for_install(
-    command: str, mac_name: str = None, linux_name: str = None
-) -> None:
+def check_for_install(app_name: str) -> None:
     """Determine if specified application is installed. Install if not found."""
-    if exit_code(command) is False:
-        if determine_os() == "linux":
-            print(
-                f"{command} does not appear to be installed. You may be prompted "
-                + "to enter sudo password."
-            )
-            linux_install(linux_name or command)
-        else:
-            mac_install(mac_name or command)
+    command = apps[app_name]["verify"]
+    if exit_code(command):
+        print(f"{app_name} already installed. Skipping. . .")
     else:
-        print(f"{command.split()[0]} already installed. Skipping. . .")
+        installer = package_manager[determine_os()].split()
+        package_name = apps[app_name][determine_os()]
+        if determine_os() == "linux" and package_name == "starship":
+            starship_installer_for_linux()
+        else:
+            subprocess.run(installer + ["install", package_name])
 
 
 @click.group()
@@ -183,9 +193,15 @@ def main() -> None:
 
 
 @main.command()
+def all():
+    """Install ALL baseline & preferred packages with personalized settings."""
+    pass
+
+
+@main.command()
 def baseline():
-    """Ensure that all core environment & CLI apps are installed. If any are
-    missing, then this will install them for you."""
+    """Ensure that all core environment & CLI apps are installed. If any are missing,
+    then this will install them."""
     installed_list = [
         each.split("/")[0]
         for each in subprocess.run(
@@ -195,8 +211,8 @@ def baseline():
         .split("\n")[1:-1]
     ]
     installer = package_manager[determine_os()].split()
-    subprocess.run(installer + ["update"])
-    for each in apps[determine_os()]:
+    baseline_candidates = baseline_apps["both"] + baseline_apps[determine_os()]
+    for each in baseline_candidates:
         if each not in installed_list:
             print(f"{each} NOT FOUND! Installing {each} now. . .")
             subprocess.run(installer + ["install", each])
@@ -206,12 +222,13 @@ def baseline():
 
 @main.command()
 def bash():
-    """Install bash shell with personalized settings."""
+    """Update bash shell to latest version if necessary and configure with personalized
+    settings."""
     if determine_os() == "darwin":
         check_for_install("bash")
         create_symlink(".bash_profile")
-        # .bashrc is needed for starship prompt when inside pipenv shell
-        create_symlink(".bashrc.mac", home / ".bashrc", override_target=True)
+        # .bashrc is ONLY needed for starship prompt when inside pipenv shell
+        create_symlink(".bashrc.mac", home / ".bashrc")
     else:
         create_symlink(".bashrc")
     create_symlink(".bash_aliases")
@@ -240,40 +257,31 @@ def iterm2():
 @main.command()
 def psql():
     """Install psql CLI for PostgreSQL with personalized settings."""
+    check_for_install("psql")
     create_symlink(".psqlrc")
-    check_for_install("psql --version")
-
-
-@main.command()
-def vim():
-    """Install GVim/MacVim with personalized settings and font."""
-    for each in vim_sources:
-        create_symlink(each)
-    check_for_install("vim --version")
-    download_and_install_font(font_info)
-
-
-@main.command()
-def tmux():
-    """Install tmux with personalized settings."""
-    running_on = determine_os()
-    check_for_install("tmux -V")
-    create_symlink(
-        f"{running_on}/.tmux.conf", home / ".tmux.conf", override_target=True
-    )
 
 
 @main.command()
 def starship():
     """Install starship prompt with personalized settings."""
-    check_for_install("starship --help")
+    check_for_install("starship")
     create_symlink(".config/starship.toml")
 
 
 @main.command()
-def all():
-    """Install ALL packages with personalized settings."""
-    pass
+def tmux():
+    """Install tmux with personalized settings."""
+    check_for_install("tmux")
+    create_symlink(f"{determine_os()}/.tmux.conf", home / ".tmux.conf")
+
+
+@main.command()
+def vim():
+    """Install GVim/MacVim with personalized settings and font."""
+    check_for_install("vim")
+    for each in vim_sources:
+        create_symlink(each)
+    download_and_install_font(font_info)
 
 
 if __name__ == "__main__":

@@ -9,13 +9,26 @@ from dotfiles import (
     exit_code,
     font_info,
     download_and_install_font,
+    starship_installer,
+    project_home,
 )
 
 
-def test_determine_os_passes_with_current_os():
-    """Make sure that current operating system is found."""
+@mark.parametrize("platform", ["linux", "darwin"])
+def test_determine_os_passes_with_valid_oses(mocker, platform):
+    """Make sure that valid operating system is found."""
+    mocker.patch("sys.platform", return_value=platform)  # Mock sys.platform response
     result = determine_os()
-    assert sys.platform == result
+    assert result() == platform
+
+
+def test_determine_os_raises_when_windows(monkeypatch):
+    """Make sure that exception is raised when attempting to run on Windows."""
+    monkeypatch.setattr(sys, "platform", lambda: "windows")
+    with raises(InvalidOperatingSystemError):
+        result = determine_os()
+        print(result)
+        assert result() == "windows"
 
 
 @mark.xfail(reason="Need to mock out sys.platform call")
@@ -71,3 +84,10 @@ def test_download_and_install_font_success(tmpdir, capsys):
     download_and_install_font(font_info, Path(tmpdir))
     stdout, _ = capsys.readouterr()
     assert "Hack.zip" in stdout
+
+
+def test_install_starship():
+    """Make sure that install.sh file downloaded & deleted."""
+    starship_installer()
+    target_file = project_home / "install.sh"
+    assert not target_file.exists()
