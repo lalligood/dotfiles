@@ -1,21 +1,11 @@
 " ==================================================================
-" .vimrc for Lance Alligood (lalligood@gmail.com)
+" .vimrc
 " ==================================================================
 
 " ==================================================================
 " PERSONAL SETTINGS
 " ==================================================================
 
-" Powerline (requires: pip install powerline-status)
-let s:uname = system("uname")
-if s:uname == "Darwin\n"
-    " Mac-specific requirements
-    python3 from powerline.vim import setup as powerline_setup
-    python3 powerline_setup()
-    python3 del powerline_setup
-endif
-set rtp+={repository_root}/powerline/bindings/vim
-set laststatus=2
 " Enable syntax highlighting
 syntax on
 " Set color scheme
@@ -145,21 +135,5 @@ nnoremap <C-j> <C-w>j
 nnoremap <C-k> <C-w>k
 nnoremap <C-l> <C-w>l
 
-" ==================================================================
-" DEVELOPMENT SPECIFIC SETTINGS
-" ==================================================================
-
-" Insert mode text expansion shortcuts as inspired by
-" https://8thlight.com/blog/jerome-goodrich/2017/01/17/Vim-and-TDD.html
-" SQL-centric
-iabbrev sqls SELECT<CR><CR>FROM <CR>WHERE <CR>--GROUP BY <CR>--ORDER BY <CR>--LIMIT <CR>;<ESC>6ki
-iabbrev sqlu UPDATE<CR>    SET <CR>WHERE <CR>RETURNING *;<ESC>3kA
-autocmd FileType sql :iabbrev ij INNER JOIN  ON<ESC>3hi
-autocmd FileType sql :iabbrev loj LEFT OUTER JOIN  ON<ESC>3hi
-" bash-centric
-iabbrev newsh #!/bin/bash<CR><CR>#
-autocmd FileType sh :iabbrev newf ()<CR># Function <CR>{<CR><CR>}<CR><ESC>5kI
-" python-centric
-iabbrev newpy #!/usr/bin/env python3<CR><CR>"""<CR>"""<CR><CR>__status__ = 'Development'<CR>__version__ = '0.0.1'<CR>__maintainer__ = 'Lance Alligood'<CR>__email__ = 'lance.alligood@omicronmedia.com'<CR><CR>
-autocmd BufWritePre *.py execute ':Black'
-
+" Pathogen plugin manager
+execute pathogen#infect()
