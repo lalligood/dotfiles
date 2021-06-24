@@ -14,7 +14,7 @@ if s:uname == "Darwin\n"
 else
     " Linux-specific options
     " Set font
-    set guifont=Hack\ 10
+    set guifont=Hack\ Nerd\ Font\ Mono\ 10
 endif
 " Enable syntax highlighting
 syntax on
@@ -159,3 +159,7 @@ nnoremap <C-l> <C-w>l
 
 " Pathogen plugin manager
 execute pathogen#infect()
+" Airline theme & settings
+let g:airline#extensions#tabline#enabled = 1
+let g:airline_powerline_fonts = 1
+let g:airline_theme='cobalt2'

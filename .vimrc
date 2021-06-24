@@ -137,3 +137,7 @@ nnoremap <C-l> <C-w>l
 
 " Pathogen plugin manager
 execute pathogen#infect()
+" Airline theme & settings
+let g:airline#extensions#tabline#enabled = 1
+let g:airline_powerline_fonts = 1
+let g:airline_theme='cobalt2'
