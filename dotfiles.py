@@ -4,7 +4,7 @@ vim settings. It will use `git clone` to acquire any pertinent files (such as Ha
 font) as well.
 
 This script requires that you are running on Linux or Mac, have at least Python 3.6
-installed & have pip installed click."""
+installed & do `pip install click requests`."""
 import click
 from pathlib import Path
 import requests
@@ -68,7 +68,7 @@ apps = {
         "verify": "vim --version",
     },
 }
-vim_sources = [".gvimrc", ".vimrc", ".vim/"]
+vim_sources = [".gvimrc", ".vimrc", ".vim"]
 
 
 class InvalidDirectoryError(Exception):
@@ -104,7 +104,8 @@ def create_symlink(source_file: str, target_path: Path = None) -> None:
     if target_file.is_file():
         new_target = target_file.with_suffix(".bak")
         target_file.rename(new_target)
-    target_file.symlink_to(source_path)
+    tid = True if source_path.is_dir() else False
+    target_file.symlink_to(source_path, target_is_directory=tid)
     print(f"Symlink for {source_path} successfully created in {target_file.parent}")
 
 
@@ -171,7 +172,7 @@ def check_for_install(app_name: str) -> None:
             subprocess.run(installer + ["install", package_name])
 
 
-@click.group()
+@click.group(chain=True)
 def main() -> None:
     """Install all applications & necessary personal configuration files for:
 
@@ -190,12 +191,6 @@ def main() -> None:
             "ERROR: PROJECTS DIRECTORY NOT FOUND IN HOME DIRECTORY OR DOES NOT "
             + "EXIST!"
         )
-
-
-@main.command()
-def all():
-    """Install ALL baseline & preferred packages with personalized settings."""
-    pass
 
 
 @main.command()
