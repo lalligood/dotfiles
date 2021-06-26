@@ -6,3 +6,14 @@ success_symbol = "[➜](bold green)"
 [python]
 python_binary = "python3"
 
+[git_status]
+conflicted = "💢"
+ahead = "🏎💨"
+behind = "🌦️"
+diverged = "💥"
+untracked = "🤷"
+stashed = "📦"
+modified = "📝"
+staged = '[++\($count\)](green)'
+renamed = "✨"
+deleted = "🗑️"
