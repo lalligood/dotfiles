@@ -10,6 +10,7 @@ from pathlib import Path
 import requests
 import subprocess
 import sys
+import webbrowser
 from zipfile import ZipFile
 
 home = Path.home()
@@ -183,6 +184,7 @@ def main() -> None:
     * starship -- prompt
     * tmux -- (t)erminal (mu)ltiple(x)er
     * vim/GVim/MacVim -- editor
+    * VSCode -- IDE (open website only!)
     """
     if home in list(current_dir.parents) and Path(project_home).exists():
         print(f"Projects directory found in: {project_home}")
@@ -277,6 +279,12 @@ def vim():
     for each in vim_sources:
         create_symlink(each)
     download_and_install_font(font_info)
+
+
+@main.command()
+def vscode():
+    """Open download page in web browser for VSCode."""
+    webbrowser.open("https://code.visualstudio.com/Download")
 
 
 if __name__ == "__main__":
