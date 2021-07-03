@@ -125,11 +125,6 @@ export LESS="--clear-screen --ignore-case --status-column --long-prompt --quiet"
 # Colorized man pages - requires `sudo apt install most`
 export PAGER="most"
 
-# Powerline
-pyver=$(python3 --version | awk -F'.' '{print $2}')
-powerline-daemon -q
-. ~/.local/lib/python3.${pyver}/site-packages/powerline/bindings/bash/powerline.sh
-
 # Supercharge <ctrl>-r with fzf (requires `apt install fzf`)
 source /usr/share/doc/fzf/examples/key-bindings.bash
 
