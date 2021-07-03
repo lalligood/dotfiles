@@ -183,7 +183,7 @@ def main() -> None:
     * psql -- PostgreSQL database CLI
     * starship -- prompt
     * tmux -- (t)erminal (mu)ltiple(x)er
-    * vim/GVim/MacVim -- editor
+    * vim -- GVim/MacVim editor
     * VSCode -- IDE (open website only!)
     """
     if home in list(current_dir.parents) and Path(project_home).exists():
@@ -284,6 +284,7 @@ def vim():
 @main.command()
 def vscode():
     """Open download page in web browser for VSCode."""
+    print("Opening download page in browser. . .")
     webbrowser.open("https://code.visualstudio.com/Download")
 
 
