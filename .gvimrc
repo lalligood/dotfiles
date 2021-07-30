@@ -10,7 +10,7 @@ let s:uname = system("uname")
 if s:uname == "Darwin\n"
     " Mac-specific options
     " Set font
-    set guifont=Hack:h13
+    set guifont=Hack\ Nerd\ Font\ Mono:h13
 else
     " Linux-specific options
     " Set font
