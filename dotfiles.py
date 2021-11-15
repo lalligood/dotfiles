@@ -25,6 +25,7 @@ font_destination = {"darwin": home / "Library" / "Fonts", "linux": home / ".font
 package_manager = {"darwin": "brew", "linux": "sudo apt"}
 baseline_apps = {
     "both": [
+        "exa",
         "fzf",
         "git",
         "lynx",
@@ -213,6 +214,8 @@ def baseline():
         if each not in installed_list:
             print(f"{each} NOT FOUND! Installing {each} now. . .")
             subprocess.run(installer + ["install", each])
+            if each == "fzf" and determine_os() == "darwin":
+                subprocess.run(["/usr/local/opt/fzf/install"])
         else:
             print(f"{each} is already installed. Skipping. . .")
 
