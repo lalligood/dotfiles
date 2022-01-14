@@ -273,7 +273,8 @@ def starship():
 def tmux():
     """Install tmux with personalized settings."""
     check_for_install("tmux")
-    create_symlink(f"{determine_os()}/.tmux.conf", home / ".tmux.conf")
+    current_os = "mac" if determine_os() == "darwin" else determine_os()
+    create_symlink(f"{current_os}/.tmux.conf", home / ".tmux.conf")
 
 
 @main.command()
