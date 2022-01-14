@@ -1,6 +1,7 @@
 [[ $(uname -s) == "Darwin" ]] && alias chmod='chmod -v' || alias chmod='chmod -cv'
 [[ $(uname -s) == "Darwin" ]] && alias chown='chown -v' || alias chown='chown -cv'
 alias cp='cp -v'
+alias df='duf -hide special'
 alias lazydocker='cd $HOME/Projects; lazydocker; cd -'
 alias ln='ln -v'
 [[ $(uname -s) == "Darwin" ]] && alias ls='ls -G'

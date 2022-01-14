@@ -25,6 +25,7 @@ font_destination = {"darwin": home / "Library" / "Fonts", "linux": home / ".font
 package_manager = {"darwin": "brew", "linux": "sudo apt"}
 baseline_apps = {
     "both": [
+        "duf",
         "exa",
         "fzf",
         "git",
