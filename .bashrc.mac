@@ -6,12 +6,16 @@ HISTFILESIZE=5000
 HISTSIZE=2500
 # less custom configuration
 export LESS="--clear-screen --ignore-case --status-column --long-prompt --quiet"
-# Add color to man pages - requires `brew install most`
+# Add color to man pages
 export PAGER="most"
 # Ensure personal aliases are used
 if [ -f ~/.bash_aliases ]; then . ~/.bash_aliases; fi
-# Supercharge <ctrl>-r with fzf (requires `brew install fzf`)
+# Supercharge <ctrl>-r with fzf
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
 # Starship shell
 eval "$(starship init bash)"
 export STARSHIP_CONFIG=~/.config/starship.toml
+# pyenv configuration
+export PYENV_ROOT="$HOME/.pyenv"
+command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"

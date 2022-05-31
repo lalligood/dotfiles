@@ -24,3 +24,7 @@ export STARSHIP_CONFIG=~/.config/starship.toml
 # Following 2 lines updates PATH for the Google Cloud SDK & enables shell command completion
 if [ -f $HOME/Projects/google-cloud-sdk/path.bash.inc ]; then . $HOME/Projects/google-cloud-sdk/path.bash.inc; fi
 if [ -f $HOME/Projects/google-cloud-sdk/completion.bash.inc ]; then . $HOME/Projects/google-cloud-sdk/completion.bash.inc; fi
+# pyenv configuration
+export PYENV_ROOT="$HOME/.pyenv"
+command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"

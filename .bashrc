@@ -121,12 +121,16 @@ fi
 # ============================================================================
 # less custom configuration
 export LESS="--clear-screen --ignore-case --status-column --long-prompt --quiet"
-# Colorized man pages - requires `sudo apt install most`
+# Colorized man pages
 export PAGER="most"
-# Supercharge <ctrl>-r with fzf (requires `apt install fzf`)
+# Supercharge <ctrl>-r with fzf
 source /usr/share/doc/fzf/examples/key-bindings.bash
 # Starship shell
 eval "$(starship init bash)"
 export STARSHIP_CONFIG=~/.config/starship.toml
+# pyenv configuration
+export PYENV_ROOT="$HOME/.pyenv"
+command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
 # Append path to run local python scripts that have been installed
 export PATH=$PATH:~/.local/bin
