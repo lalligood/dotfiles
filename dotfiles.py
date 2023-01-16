@@ -37,6 +37,7 @@ baseline_apps = {
     ],
     "darwin": [
         "bash",
+        "difftastic",
         "lazydocker",
         "the_silver_searcher",
         "yank",
@@ -215,8 +216,11 @@ def baseline():
         if each not in installed_list:
             print(f"{each} NOT FOUND! Installing {each} now. . .")
             subprocess.run(installer + ["install", each])
-            if each == "fzf" and determine_os() == "darwin":
-                subprocess.run(["/usr/local/opt/fzf/install"])
+            if determine_os() == "darwin":
+                if each == "fzf":
+                    subprocess.run(["/usr/local/opt/fzf/install"])
+                if each == "difftastic":
+                    subprocess.run(["git config --global diff.external difft"])
         else:
             print(f"{each} is already installed. Skipping. . .")
 
