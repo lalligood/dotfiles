@@ -134,3 +134,5 @@ command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
 # Append path to run local python scripts that have been installed
 export PATH=$PATH:~/.local/bin
+# Add timestamp to bash history
+HISTTIMEFORMAT="%F %T "
