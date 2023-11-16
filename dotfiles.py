@@ -19,10 +19,21 @@ current_dir = Path.cwd()
 currently_installed_list = {
     "darwin": ["brew", "list"],
     "linux": ["apt", "list", "--installed"],
+    "snap": ["snap", "list"],
 }
-font_info = {"repo": "ryanoasis/nerd-fonts", "name": "Hack"}
-font_destination = {"darwin": home / "Library" / "Fonts", "linux": home / ".fonts"}
-package_manager = {"darwin": "brew", "linux": "sudo apt"}
+font_info = {
+    "repo": "ryanoasis/nerd-fonts",
+    "name": "Hack",
+    "destination": {
+        "darwin": home / "Library" / "Fonts",
+        "linux": home / ".fonts",
+    },
+}
+package_manager = {
+    "darwin": "brew",
+    "linux": "sudo apt",
+    "snap": "sudo snap",
+}
 baseline_apps = {
     "both": [
         "duf",
@@ -72,6 +83,16 @@ apps = {
         "verify": "vim --version",
     },
 }
+snaps = {
+    "Firefox": "firefox",
+    "GitKraken": "gitkraken",
+    "Slack": "slack",
+    "Spotify": "spotify",
+    "VLC": "vlc",
+    "VSCode": "code",
+    "Zoom": "zoom-client",
+    "difftastic": "difftastic",
+}
 vim_sources = [".gvimrc", ".vimrc", ".vim"]
 
 
@@ -113,12 +134,15 @@ def create_symlink(source_file: str, target_path: Path = None) -> None:
     print(f"Symlink for {source_path} successfully created in {target_file.parent}")
 
 
-def download_and_install_font(font: str, download_path: Path = None) -> None:
+def download_and_install_font(
+    font: dict, operating_system: str, download_path: Path = None
+) -> None:
     """Download latest version of Hack Nerd font from GitHub to local directory. If font
     already exists, it will download latest version & install it."""
     print("Checking for latest version of Hack Nerd font. This may take a few seconds.")
-    repo = font.get("repo")
-    name = font.get("name")
+    repo = font["repo"]
+    name = font["name"]
+    destination = font["destination"]
     latest_url = f"https://api.github.com/repos/{repo}/releases/latest"
     response = requests.get(latest_url).json()
     version = response.get("tag_name")
@@ -130,7 +154,7 @@ def download_and_install_font(font: str, download_path: Path = None) -> None:
     with requests.get(zip_file_url, stream=True) as r, open(zip_file_path, "wb") as f:
         for chunk in r.iter_content(chunk_size=8192):
             f.write(chunk)
-    target_path = font_destination[determine_os()]
+    target_path = destination[operating_system]
     target_path.mkdir(exist_ok=True)
     with ZipFile(zip_file_path, "r") as z:
         z.extractall(target_path)
@@ -162,18 +186,19 @@ def starship_installer_for_linux():
     target_file.unlink()
 
 
-def check_for_install(app_name: str) -> None:
+def check_for_install(app_name: str, operating_system: str) -> None:
     """Determine if specified application is installed. Install if not found."""
     command = apps[app_name]["verify"]
+    package_name = apps[app_name][operating_system]
+    installer = package_manager[operating_system].split()
+    installer.extend(["install", package_name])
     if exit_code(command):
         print(f"{app_name} already installed. Skipping. . .")
-    else:
-        installer = package_manager[determine_os()].split()
-        package_name = apps[app_name][determine_os()]
-        if determine_os() == "linux" and package_name == "starship":
-            starship_installer_for_linux()
-        else:
-            subprocess.run(installer + ["install", package_name])
+        return
+    if operating_system == "linux" and package_name == "starship":
+        starship_installer_for_linux()
+        return
+    subprocess.run(installer)
 
 
 @click.group(chain=True)
@@ -188,6 +213,17 @@ def main() -> None:
     * tmux -- (t)erminal (mu)ltiple(x)er
     * vim -- GVim/MacVim editor
     * VSCode -- IDE (open website only!)
+    \b
+    Some Linux applications should be installed as snaps, such as:
+    \b
+    * Firefox
+    * GitKraken
+    * Slack
+    * Spotify
+    * VLC
+    * VSCode
+    * Zoom
+    * difftastic
     """
     if home in list(current_dir.parents) and Path(project_home).exists():
         print(f"Projects directory found in: {project_home}")
@@ -202,20 +238,21 @@ def main() -> None:
 def baseline():
     """Ensure that all core environment & CLI apps are installed. If any are missing,
     then this will install them."""
+    platform = determine_os()
     installed_list = [
         each.split("/")[0]
         for each in subprocess.run(
-            currently_installed_list[determine_os()], capture_output=True
+            currently_installed_list[platform], capture_output=True
         )
         .stdout.decode()
         .split("\n")[1:-1]
     ]
-    installer = package_manager[determine_os()].split()
-    baseline_candidates = baseline_apps["both"] + baseline_apps[determine_os()]
+    installer = package_manager[platform].split()
+    baseline_candidates = baseline_apps["both"] + baseline_apps[platform]
     for each in baseline_candidates:
         if each not in installed_list:
             print(f"{each} NOT FOUND! Installing {each} now. . .")
-            subprocess.run(installer + ["install", each])
+            subprocess.run(installer.extend(["install", each]))
             if determine_os() == "darwin":
                 if each == "fzf":
                     subprocess.run(["/usr/local/opt/fzf/install"])
@@ -229,8 +266,9 @@ def baseline():
 def bash():
     """Update bash shell to latest version if necessary and configure with personalized
     settings."""
-    if determine_os() == "darwin":
-        check_for_install("bash")
+    platform = determine_os()
+    if platform == "darwin":
+        check_for_install("bash", platform)
         create_symlink(".bash_profile")
         # .bashrc is ONLY needed for starship prompt when inside pipenv shell
         create_symlink(".bashrc.mac", home / ".bashrc")
@@ -252,8 +290,9 @@ def iterm2():
 4. Ensure that "Load preferences from a custom folder or URL" is checked.
 5. Click Browse & navigate to your dotfiles project folder containing
     com.googlecode.iterm2.plist file. Click Open."""
-    if determine_os() == "darwin":
-        check_for_install("iterm2")
+    platform = determine_os()
+    if platform == "darwin":
+        check_for_install("iterm2", platform)
         print(usage)
     else:
         print("iterm2 CAN ONLY BE INSTALLED ON MAC OSX. Skipping. . .")
@@ -262,39 +301,66 @@ def iterm2():
 @main.command()
 def psql():
     """Install psql CLI for PostgreSQL with personalized settings."""
-    check_for_install("psql")
+    platform = determine_os()
+    check_for_install("psql", platform)
     create_symlink(".psqlrc")
 
 
 @main.command()
 def starship():
     """Install starship prompt with personalized settings."""
-    check_for_install("starship")
+    platform = determine_os()
+    check_for_install("starship", platform)
     create_symlink(".config/starship.toml")
 
 
 @main.command()
 def tmux():
     """Install tmux with personalized settings."""
-    check_for_install("tmux")
-    current_os = "mac" if determine_os() == "darwin" else determine_os()
+    platform = determine_os()
+    check_for_install("tmux", platform)
+    current_os = "mac" if platform == "darwin" else platform
     create_symlink(f"{current_os}/.tmux.conf", home / ".tmux.conf")
 
 
 @main.command()
 def vim():
     """Install GVim/MacVim with personalized settings and font."""
-    check_for_install("vim")
+    platform = determine_os()
+    check_for_install("vim", platform)
     for each in vim_sources:
         create_symlink(each)
-    download_and_install_font(font_info)
+    download_and_install_font(font_info, platform)
 
 
 @main.command()
 def vscode():
-    """Open download page in web browser for VSCode."""
-    print("Opening download page in browser. . .")
-    webbrowser.open("https://code.visualstudio.com/Download")
+    """Install VSCode for MacOSX by opening download page in web browser."""
+    platform = determine_os()
+    if platform == "darwin":
+        print(
+            "VSCode needs to be installed manually on Mac OSX. "
+            "Opening download page in browser. . ."
+        )
+        webbrowser.open("https://code.visualstudio.com/Download")
+    else:
+        print("Run dotfiles with '--snap' option to install VSCode on Linux.")
+
+
+@main.command()
+# @click.argument()
+def snap():
+    """Allowed selected applications to be installed on Linux via snap store."""
+    platform = determine_os()
+    if platform != "linux":
+        print("Snaps can only be installed in Linux! Exiting . . .")
+        sys.exit(1)
+    # Ask user if they want all installed or select particular snaps to be installed
+    for app_name, snap_name in snaps.items():
+        print(f"Installing {app_name}. Enter 'sudo' password if prompted.")
+        installer = package_manager["snap"].split()
+        installer.extend(["install", snap_name])
+        subprocess.run(installer)
 
 
 if __name__ == "__main__":
