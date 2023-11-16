@@ -10,6 +10,7 @@ from pathlib import Path
 import requests
 import subprocess
 import sys
+from typing import Optional
 import webbrowser
 from zipfile import ZipFile
 
@@ -118,7 +119,7 @@ def determine_os() -> str:
     return current_os
 
 
-def create_symlink(source_file: str, target_path: Path = None) -> None:
+def create_symlink(source_file: str, target_path: Optional[Path] = None) -> None:
     """Create a symlink in expected directory for specified file."""
     source_path = current_dir / source_file
     target_file = target_path or (home / source_file)
@@ -135,7 +136,7 @@ def create_symlink(source_file: str, target_path: Path = None) -> None:
 
 
 def download_and_install_font(
-    font: dict, operating_system: str, download_path: Path = None
+    font: dict, operating_system: str, download_path: Optional[Path] = None
 ) -> None:
     """Download latest version of Hack Nerd font from GitHub to local directory. If font
     already exists, it will download latest version & install it."""
