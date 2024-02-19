@@ -349,7 +349,6 @@ def vscode():
 
 
 @main.command()
-# @click.argument()
 def snap():
     """Allowed selected applications to be installed on Linux via snap store."""
     platform = determine_os()
