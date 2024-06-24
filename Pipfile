@@ -11,9 +11,8 @@ types-requests = "*"
 [dev-packages]
 pytest = "*"
 pre-commit = "*"
-flake8 = "*"
-black = "*"
 ipython = "*"
+ruff = "*"
 
 [requires]
-python_version = "3.11"
+python_version = "3.12"

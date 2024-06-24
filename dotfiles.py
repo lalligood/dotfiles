@@ -5,6 +5,7 @@ font) as well.
 
 This script requires that you are running on Linux or Mac, have at least Python 3.6
 installed & do `pip install click requests`."""
+
 import click
 from pathlib import Path
 import requests
@@ -38,7 +39,7 @@ package_manager = {
 baseline_apps = {
     "both": [
         "duf",
-        "exa",
+        "lsd",
         "fzf",
         "git",
         "lynx",
