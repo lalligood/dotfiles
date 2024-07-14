@@ -201,8 +201,8 @@ def check_for_install(app_name: str, operating_system: str) -> None:
     if exit_code(command):
         print(f"{app_name} already installed. Skipping. . .")
         return
-    if operating_system == "linux" and package_name in manual_installs.keys:
-        bash_installer_for_linux()
+    if operating_system == "linux" and package_name in manual_installs.keys():
+        bash_installer_for_linux(package_name, manual_installs[package_name])
         return
     subprocess.run(installer)
 
