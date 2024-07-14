@@ -134,5 +134,5 @@ command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
 # Add timestamp to bash history
 HISTTIMEFORMAT="%F %T "
-# Zoxide
+# zoxide
 eval "$(zoxide init bash)"

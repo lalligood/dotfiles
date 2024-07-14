@@ -96,6 +96,10 @@ snaps = {
     "difftastic": "difftastic",
 }
 vim_sources = [".gvimrc", ".vimrc", ".vim"]
+manual_installs = {
+    "starship": "https://starship.rs",
+    "zoxide": "https://raw.githubusercontent.com/ajeetdsouza/zoxide/main",
+}
 
 
 class InvalidDirectoryError(Exception):
@@ -173,16 +177,16 @@ def exit_code(command: str) -> bool:
     return True if _exit_code.returncode == 0 else False
 
 
-def starship_installer_for_linux():
-    """LINUX ONLY: Download installer, install starship prompt, and delete installer."""
+def bash_installer_for_linux(application_name: str, base_url: str) -> None:
+    """LINUX ONLY: Download installer, install application, and delete installer."""
     install_file = "install.sh"
-    url = f"https://starship.rs/{install_file}"
+    url = f"{base_url}/{install_file}"
     target_file = project_home / install_file
-    print(f"Downloading {target_file}")
+    print(f"Downloading {application_name}")
     installer = requests.get(url, stream=True, allow_redirects=True, timeout=30)
     with open(target_file, "wb") as f:
         f.write(installer.content)
-    print("Installing starship. . .")
+    print(f"Installing {application_name}. . .")
     subprocess.run(["sh", "-c", target_file])
     print(f"Deleting {target_file}")
     target_file.unlink()
@@ -197,8 +201,8 @@ def check_for_install(app_name: str, operating_system: str) -> None:
     if exit_code(command):
         print(f"{app_name} already installed. Skipping. . .")
         return
-    if operating_system == "linux" and package_name == "starship":
-        starship_installer_for_linux()
+    if operating_system == "linux" and package_name in manual_installs.keys:
+        bash_installer_for_linux()
         return
     subprocess.run(installer)
 
