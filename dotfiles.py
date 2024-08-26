@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
-"""Create all necessary symlinks for personalized iTerm (Mac only), psql, tmux, &
-vim settings. It will use `git clone` to acquire any pertinent files (such as Hack
-font) as well.
-
-This script requires that you are running on Linux or Mac, have at least Python 3.6
-installed & do `pip install click requests`."""
+"""Install all personal applications & provide all personal configurations."""
 
 import click
 from pathlib import Path
@@ -143,8 +138,10 @@ def create_symlink(source_file: str, target_path: Optional[Path] = None) -> None
 def download_and_install_font(
     font: dict, operating_system: str, download_path: Optional[Path] = None
 ) -> None:
-    """Download latest version of Hack Nerd font from GitHub to local directory. If font
-    already exists, it will download latest version & install it."""
+    """Download latest version of Hack Nerd font from GitHub to local directory.
+
+    If font already exists, it will download latest version & install it.
+    """
     print("Checking for latest version of Hack Nerd font. This may take a few seconds.")
     repo = font["repo"]
     name = font["name"]
@@ -209,7 +206,7 @@ def check_for_install(app_name: str, operating_system: str) -> None:
 
 @click.group(chain=True)
 def main() -> None:
-    """Install all applications & necessary personal configuration files for:
+    r"""Install all applications & necessary personal configuration files for:
 
     \b
     * bash -- shell
@@ -242,8 +239,10 @@ def main() -> None:
 
 @main.command()
 def baseline():
-    """Ensure that all core environment & CLI apps are installed. If any are missing,
-    then this will install them."""
+    """Ensure that all core environment & CLI apps are installed.
+
+    If any are missing, then this will install them.
+    """
     platform = determine_os()
     installed_list = [
         each.split("/")[0]
@@ -270,8 +269,7 @@ def baseline():
 
 @main.command()
 def bash():
-    """Update bash shell to latest version if necessary and configure with personalized
-    settings."""
+    """Update bash shell if necessary & configure with personalized settings."""
     platform = determine_os()
     if platform == "darwin":
         check_for_install("bash", platform)
@@ -285,8 +283,7 @@ def bash():
 
 @main.command()
 def iterm2():
-    """Mac OSX ONLY: Install iTerm2 & provide instructions to load preferred
-    settings."""
+    """Install iTerm2 (Mac OSX ONLY) & provide instructions to load settings."""
     usage = """VERY IMPORTANT: READ ALL OF THIS BEFORE CONTINUING!!!
 
         *** INSTRUCTIONS FOR RESTORING iTerm2 SETTINGS ***
@@ -355,7 +352,7 @@ def vscode():
 
 @main.command()
 def snap():
-    """Allowed selected applications to be installed on Linux via snap store."""
+    """Allow selected applications to be installed on Linux via snap store."""
     platform = determine_os()
     if platform != "linux":
         print("Snaps can only be installed in Linux! Exiting . . .")
