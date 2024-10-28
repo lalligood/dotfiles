@@ -119,6 +119,7 @@ fi
 # ============================================================================
 # PERSONAL SETTINGS BELOW
 # ============================================================================
+export EDITOR=vim
 # less custom configuration
 export LESS="--clear-screen --ignore-case --status-column --long-prompt --quiet"
 # Colorized man pages
