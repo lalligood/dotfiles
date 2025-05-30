@@ -45,12 +45,14 @@ baseline_apps = {
     ],
     "darwin": [
         "bash",
+        "fd",
         "difftastic",
         "lazydocker",
         "the_silver_searcher",
         "yank",
     ],
     "linux": [
+        "fdfind",
         # "lazydocker",
         "silversearcher-ag",
     ],
