@@ -13,5 +13,5 @@ alias pip='pip3'
 alias py='ipython3'
 alias python='python3'
 alias rm='rm -v'
-alias update_all='sudo apt update; sudo apt upgrade; sudo apt autoremove; sudo snap refresh; pyenv update'
+alias update_all='sudo apt update; sudo apt upgrade; sudo apt autoremove; sudo snap refresh; uv self update'
 md() { pandoc "$1" | lynx -stdin; }  # markdown viewer

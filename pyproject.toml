@@ -1,0 +1,15 @@
+[project]
+name = "dotfiles"
+version = "0.1.0"
+description = "Install all personal applications & settings."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "click",
+    "pytest",
+    "pre-commit",
+    "ipython",
+    "requests",
+    "ruff",
+    "types-requests",
+]

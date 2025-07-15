@@ -92,6 +92,7 @@ snaps = {
     "Zoom": "zoom-client",
     "difftastic": "difftastic",
 }
+uv_install = "curl -LsSf https://astral.sh/uv/install.sh | sh"
 vim_sources = [".gvimrc", ".vimrc", ".vim"]
 manual_installs = {
     "starship": "https://starship.rs",
@@ -216,6 +217,7 @@ def main() -> None:
     * psql -- PostgreSQL database CLI
     * starship -- prompt
     * tmux -- (t)erminal (mu)ltiple(x)er
+    * uv -- an extremely fast Python package manager
     * vim -- GVim/MacVim editor
     * VSCode -- IDE (open website only!)
     \b
@@ -267,6 +269,9 @@ def baseline():
                     subprocess.run(["git config --global diff.external difft"])
         else:
             print(f"{each} is already installed. Skipping. . .")
+    print("Installing (or updating) UV package manager. . .")
+    result = subprocess.run(uv_install, shell=True, capture_output=True, text=True)
+    print(result.stdout)
 
 
 @main.command()
