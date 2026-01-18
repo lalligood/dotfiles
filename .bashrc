@@ -119,6 +119,7 @@ fi
 # ============================================================================
 # PERSONAL SETTINGS BELOW
 # ============================================================================
+export EDITOR=vim
 # less custom configuration
 export LESS="--clear-screen --ignore-case --status-column --long-prompt --quiet"
 # Colorized man pages
@@ -132,5 +133,7 @@ export STARSHIP_CONFIG=~/.config/starship.toml
 export PYENV_ROOT="$HOME/.pyenv"
 command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
-# Append path to run local python scripts that have been installed
-export PATH=$PATH:~/.local/bin
+# Add timestamp to bash history
+HISTTIMEFORMAT="%F %T "
+# zoxide
+eval "$(zoxide init bash)"

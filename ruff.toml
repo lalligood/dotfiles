@@ -1,0 +1,14 @@
+line-length = 88
+indent-width = 4
+
+[lint]
+select = ["D"]
+ignore = ["D203", "D211", "D213", "D400", "D415"]
+
+[format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = true
+docstring-code-line-length = 80

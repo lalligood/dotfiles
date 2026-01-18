@@ -1,4 +1,5 @@
 """Tests for dotfiles.py."""
+
 from pathlib import Path
 from pytest import mark, raises
 import sys
